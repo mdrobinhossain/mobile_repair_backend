@@ -1,10 +1,12 @@
 const express = require('express')
+const fs = require('fs');
 const bodyParser = require('body-parser')
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const upload = require('express-fileupload');
+require('dotenv').config()
 
-const port = 5000
+const port = process.env.PORT || 5000;
 const uri = "mongodb+srv://hossainmdrobin09:hossainmdrobin09@cluster0.mgbyb.mongodb.net/mobilerepair?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
@@ -41,6 +43,12 @@ client.connect(err => {
       res.send(result);
     })
   })
+  app.post('/deleteservice',(req,res) => {
+    serviceCollection.deleteOne({_id:ObjectId(req.body._id)},(err,result)=> {
+      if(err) console.log(err)
+      res.send(result);
+    })
+  })
 
   //LOADING SERVICE DETAIL FROM MONGODB
   app.get('/loadservices',(req, res) => {
@@ -74,6 +82,18 @@ client.connect(err => {
     })
   })
 
+  //DELETING MECHANIC FROM MONGODB AND NODE JS DIRECTORY
+  app.post('/deletemechanic',(req,res)=>{
+    const email = {email:req.body.email}
+    
+    mechanicCollection.deleteOne(email,(err, result)=>{
+      if(err) throw err;
+      res.send(result)
+      
+    })
+
+  })
+
   //LOADING MECHANIC DETAIL FROM MONGODB
   app.get('/loadmechanics',(req, res) => {
     mechanicCollection.find({})
@@ -91,6 +111,24 @@ client.connect(err => {
       res.send(result);
     })
   })
+  //UPDATE CUSTOMER DETAIL WITH THEIR POST/ COMMENT
+  app.post("/customerpost",(req,res)=>{
+    customerQuary = req.body.customerQuary;
+    updatedCustomer= {$set:{post:req.body.updatedCustomer.post}};
+    customerCollection.updateOne(customerQuary, updatedCustomer, (err, result)=> {
+      if(err) throw err;
+      res.send(result)
+    })
+  })
+  // LOAD ALL CUSTOMER POST 
+  app.get('/loadcustomerpost',(req,res)=>{
+    customerCollection.find({})
+    .toArray((err,result)=>{
+      if(err) console.log(err)
+      res.send(result);
+    })
+  })
+  //LOADING CUSTOMER DETAIL FROM MONGODB
   app.post('/loadcustomer', (req,res) => {
     const loggedInUser = req.body;
     mechanicCollection.find(loggedInUser)
